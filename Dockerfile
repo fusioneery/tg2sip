@@ -58,6 +58,12 @@ RUN git init ntgcalls \
     && git checkout FETCH_HEAD \
     && git submodule update --init --recursive --depth 1
 WORKDIR /build/ntgcalls
+# Backport upstream b23e0d8 (issue #51): finish creating the network transport
+# before an incoming audio channel can attach to it. Without this, the native
+# worker can dereference a null RTP transport when the Telegram user answers.
+COPY patches/ntgcalls-issue-51.patch /tmp/ntgcalls-issue-51.patch
+RUN git apply --check /tmp/ntgcalls-issue-51.patch \
+    && git apply /tmp/ntgcalls-issue-51.patch
 # Remove ONLY the openh264 software encoder (decoder kept); forces VP8/VP9.
 RUN sed -i '/openh264::addEncoders/d' wrtc/src/video_factory/video_factory_config.cpp \
     && ! grep -q 'openh264::addEncoders' wrtc/src/video_factory/video_factory_config.cpp \
