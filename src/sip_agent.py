@@ -189,7 +189,10 @@ class SipCall(pj.Call):
     def end(self) -> None:
         if self.isActive():
             prm = pj.CallOpParam(True)
-            prm.statusCode = 200
+            # If Telegram hangs up before connecting, this is still an early
+            # incoming SIP call. A 200 here answers it and makes Asterisk think
+            # the owner picked up, so reject that INVITE instead.
+            prm.statusCode = 480
             self.hangup(prm)
 
 
